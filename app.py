@@ -11,6 +11,6 @@ if uploaded_file:
     img = Image.open(uploaded_file).convert("RGB")
     st.image(img,  use_container_width=True)
 
-    st.subheader("Original Image", divider="blue")
+    st.subheader("Detected Image", divider="blue")
     result_img = detect_faces_and_eyes(np.array(img))
     st.image(result_img,  use_container_width=True)
