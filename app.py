@@ -1,17 +1,14 @@
 import streamlit as st
+from detect import detect_faces_and_eyes
+from PIL import Image
+import numpy as np
 
-st.title("Eugenia's Website")
-st.write("Welcome to my web!")
+st.title("Face and Eye Detection with YOLO")
+uploaded_file = st.file_uploader("Upload a photo", type=["jpg", "png", "jpeg"])
 
-prompt = st.chat_input("Say something")
-if prompt:
-    st.write(f"User: {prompt}")
+if uploaded_file:
+    img = Image.open(uploaded_file).convert("RGB")
+    st.image(img, caption="Original Image", use_container_width=True)
 
-st.balloons()
-
-st.badge("New")
-st.badge("Success", icon=":material/check:", color="green")
-
-st.markdown(
-    ":violet-badge[:material/star: Favorite] :orange-badge[⚠️ Needs review] :gray-badge[Deprecated]"
-)
+    result_img = detect_faces_and_eyes(np.array(img))
+    st.image(result_img, caption="Detected Image", use_container_width=True)
