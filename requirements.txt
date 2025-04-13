@@ -1,4 +1,5 @@
 streamlit
 requests
 speechrecognition
-openai-whisper
+openai-whisper  # Hanya jika Anda berencana menggunakan Whisper untuk transkripsi
+
