@@ -1,86 +1,31 @@
+import openai
 import streamlit as st
-import requests
-import speech_recognition as sr
-import re
 
-# Fungsi untuk mengonversi audio ke teks menggunakan SpeechRecognition
-def audio_to_text_using_recognition(audio_file):
-    recognizer = sr.Recognizer()
-    
-    # Membaca file audio yang di-upload
-    with sr.AudioFile(audio_file) as source:
-        audio_data = recognizer.record(source)  # Mengambil data audio dari file
-        # Menggunakan Google Speech-to-Text dengan bahasa Indonesia
-        text = recognizer.recognize_google(audio_data, language="id-ID")
-    return text
+# Masukkan API Key dari OpenAI
+openai.api_key = "YOUR_OPENAI_API_KEY"  # Ganti dengan API Key Anda
 
-# Fungsi untuk membersihkan teks dari karakter yang tidak diinginkan
-def clean_text(text):
-    # Menghapus karakter yang tidak diinginkan (misalnya, karakter acak atau simbol)
-    text = re.sub(r'[^\x00-\x7F]+', '', text)  # Menghapus karakter non-ASCII
-    text = re.sub(r'[^a-zA-Z0-9\s,.!?;:()[]{}-]', '', text)  # Menghapus karakter yang tidak relevan
-    text = re.sub(r'\s+', ' ', text)  # Mengganti spasi berlebih menjadi satu
-    return text.strip()
-
-# Fungsi untuk mengirim teks ke model LLaMA-3.2-3B-Instruct di Hugging Face
-def get_llama_response(text):
-    # Mengambil API key dari Streamlit Secrets
-    huggingface_api_key = st.secrets["huggingface"]["api_key"]
-    
-    headers = {
-        "Authorization": f"Bearer {huggingface_api_key}"
-    }
-    payload = {
-        "inputs": text
-    }
-    
-    url = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.2-3B-Instruct"
-    
-    try:
-        response = requests.post(url, headers=headers, json=payload)
-        
-        # Memeriksa status dan mencetak untuk debugging
-        st.write(f"Status Code: {response.status_code}")
-        st.write(f"Response Text: {response.text}")
-        
-        if response.status_code == 200:
-            # Mengambil item pertama dari list respons dan membersihkan teksnya
-            result = response.json()
-            if isinstance(result, list) and 'generated_text' in result[0]:
-                # Ambil teks yang dihasilkan dan bersihkan
-                generated_text = result[0].get('generated_text', 'Tidak ada respons')
-                cleaned_text = clean_text(generated_text)
-                return {"generated_text": cleaned_text}
-            else:
-                return {"generated_text": "Unexpected response format"}
-        else:
-            return {"generated_text": "Error: Unable to get response from LLaMA"}
-    
-    except Exception as e:
-        st.write(f"Error occurred: {e}")
-        return {"generated_text": "An error occurred while processing the request."}
+# Fungsi untuk mendapatkan respons dari GPT
+def get_openai_response(text):
+    response = openai.Completion.create(
+        model="text-davinci-003",  # Gunakan "gpt-4" jika Anda ingin menggunakan GPT-4
+        prompt=text,
+        max_tokens=20  # Jumlah token maksimum yang ingin digunakan
+    )
+    return response.choices[0].text.strip()
 
 # Membuat tampilan Streamlit
-st.title("Audio to LLaMA Response")
+st.title("Menggunakan GPT-3.5 atau GPT-4 untuk Membuat Respons")
 
-# File uploader untuk merekam audio
-audio_file = st.file_uploader("Upload Audio", type=["wav", "mp3"])
+# Input teks untuk prompt
+user_input = st.text_area("Masukkan teks untuk mendapatkan respons GPT")
 
-if audio_file is not None:
-    # Mengonversi audio ke teks
-    st.write("Mengenali teks dari audio...")
-    
-    try:
-        # Menggunakan speech recognition untuk mengonversi audio ke teks
-        text = audio_to_text_using_recognition(audio_file)
-        st.write(f"Teks: {text}")
-        
-        # Mengirim teks ke LLaMA dan mendapatkan respons
-        response = get_llama_response(text)
-        
-        # Menampilkan respons dari LLaMA
-        st.write("Respons dari LLaMA:")
-        st.write(response.get('generated_text', 'Tidak ada respons'))
-    
-    except Exception as e:
-        st.write(f"Terjadi kesalahan saat memproses audio: {e}")
+# Ketika pengguna mengirimkan teks
+if user_input:
+    st.write("Mengenali teks dari input...")
+
+    # Dapatkan respons dari GPT
+    gpt_response = get_openai_response(user_input)
+
+    # Menampilkan respons dari GPT
+    st.write("Respons dari GPT-3.5 atau GPT-4:")
+    st.write(gpt_response)
