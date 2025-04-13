@@ -1,21 +1,17 @@
 import streamlit as st
 import requests
+import speech_recognition as sr
 from io import BytesIO
-from pydub import AudioSegment
-import whisper
-import json
 
-# Inisialisasi Whisper model untuk STT
-whisper_model = whisper.load_model("base")
-
-# Fungsi untuk mengonversi audio ke teks menggunakan Whisper
-def audio_to_text(audio_file):
-    audio = AudioSegment.from_file(audio_file)
-    audio = audio.set_channels(1).set_frame_rate(16000)
-    audio_data = audio.raw_data
-
-    result = whisper_model.transcribe(audio_data)
-    return result["text"]
+# Fungsi untuk mengonversi audio ke teks menggunakan SpeechRecognition
+def audio_to_text_using_recognition(audio_file):
+    recognizer = sr.Recognizer()
+    
+    # Membaca file audio yang di-upload
+    with sr.AudioFile(audio_file) as source:
+        audio_data = recognizer.record(source)  # Mengambil data audio dari file
+        text = recognizer.recognize_google(audio_data)  # Menggunakan Google Speech-to-Text
+    return text
 
 # Fungsi untuk mengirim teks ke model LLaMA di Hugging Face
 def get_llama_response(text):
@@ -44,12 +40,16 @@ audio_file = st.file_uploader("Upload Audio", type=["wav", "mp3"])
 if audio_file is not None:
     # Mengonversi audio ke teks
     st.write("Mengenali teks dari audio...")
-    text = audio_to_text(audio_file)
-    st.write(f"Teks: {text}")
+    try:
+        text = audio_to_text_using_recognition(audio_file)
+        st.write(f"Teks: {text}")
+    except Exception as e:
+        st.write(f"Terjadi kesalahan saat memproses audio: {e}")
     
     # Mengirim teks ke LLaMA dan mendapatkan respons
-    response = get_llama_response(text)
-    
-    # Menampilkan respons dari LLaMA
-    st.write("Respons dari LLaMA:")
-    st.write(response.get('generated_text', 'Tidak ada respons'))
+    if text:
+        response = get_llama_response(text)
+        
+        # Menampilkan respons dari LLaMA
+        st.write("Respons dari LLaMA:")
+        st.write(response.get('generated_text', 'Tidak ada respons'))
