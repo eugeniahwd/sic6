@@ -18,6 +18,7 @@ def audio_to_text_using_recognition(audio_file):
 def clean_text(text):
     # Menghapus karakter yang tidak diinginkan (misalnya, karakter acak atau simbol)
     text = re.sub(r'[^\x00-\x7F]+', '', text)  # Menghapus karakter non-ASCII
+    text = re.sub(r'[^a-zA-Z0-9\s,.!?;:()[]{}-]', '', text)  # Menghapus karakter yang tidak relevan
     text = re.sub(r'\s+', ' ', text)  # Mengganti spasi berlebih menjadi satu
     return text.strip()
 
@@ -45,7 +46,7 @@ def get_llama_response(text):
         if response.status_code == 200:
             # Mengambil item pertama dari list respons dan membersihkan teksnya
             result = response.json()
-            if isinstance(result, list):
+            if isinstance(result, list) and 'generated_text' in result[0]:
                 # Ambil teks yang dihasilkan dan bersihkan
                 generated_text = result[0].get('generated_text', 'Tidak ada respons')
                 cleaned_text = clean_text(generated_text)
