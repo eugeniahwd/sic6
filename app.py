@@ -10,7 +10,7 @@ def audio_to_text_using_recognition(audio_file):
     # Membaca file audio yang di-upload
     with sr.AudioFile(audio_file) as source:
         audio_data = recognizer.record(source)  # Mengambil data audio dari file
-        text = recognizer.recognize_google(audio_data)  # Menggunakan Google Speech-to-Text
+        text = recognizer.recognize_google(audio_data, language="id-ID")  # Menggunakan Google Speech-to-Text dengan bahasa Indonesia
     return text
 
 # Fungsi untuk mengirim teks ke model LLaMA di Hugging Face
