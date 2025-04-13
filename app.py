@@ -46,7 +46,9 @@ def get_llama_response(text):
             # Mengambil item pertama dari list respons dan membersihkan teksnya
             result = response.json()
             if isinstance(result, list):
-                cleaned_text = clean_text(result[0].get('generated_text', 'Tidak ada respons'))
+                # Ambil teks yang dihasilkan dan bersihkan
+                generated_text = result[0].get('generated_text', 'Tidak ada respons')
+                cleaned_text = clean_text(generated_text)
                 return {"generated_text": cleaned_text}
             else:
                 return {"generated_text": "Unexpected response format"}
