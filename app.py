@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import speech_recognition as sr
-from io import BytesIO
+import re
 
 # Fungsi untuk mengonversi audio ke teks menggunakan SpeechRecognition
 def audio_to_text_using_recognition(audio_file):
@@ -13,6 +13,13 @@ def audio_to_text_using_recognition(audio_file):
         # Menggunakan Google Speech-to-Text dengan bahasa Indonesia
         text = recognizer.recognize_google(audio_data, language="id-ID")
     return text
+
+# Fungsi untuk membersihkan teks dari karakter yang tidak diinginkan
+def clean_text(text):
+    # Menghapus karakter yang tidak diinginkan (misalnya, karakter acak atau simbol)
+    text = re.sub(r'[^\x00-\x7F]+', '', text)  # Menghapus karakter non-ASCII
+    text = re.sub(r'\s+', ' ', text)  # Mengganti spasi berlebih menjadi satu
+    return text.strip()
 
 # Fungsi untuk mengirim teks ke model LLaMA-3.2-3B-Instruct di Hugging Face
 def get_llama_response(text):
@@ -26,23 +33,21 @@ def get_llama_response(text):
         "inputs": text
     }
     
-    # URL model LLaMA-3.2-3B-Instruct
     url = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.2-3B-Instruct"
     
     try:
-        # Mengirim POST request ke Hugging Face API
         response = requests.post(url, headers=headers, json=payload)
         
-        # Menampilkan status kode dan respons untuk debugging
+        # Memeriksa status dan mencetak untuk debugging
         st.write(f"Status Code: {response.status_code}")
         st.write(f"Response Text: {response.text}")
         
         if response.status_code == 200:
-            # Mengakses respons yang berupa list dan mengambil item pertama
+            # Mengambil item pertama dari list respons dan membersihkan teksnya
             result = response.json()
             if isinstance(result, list):
-                # Ambil text dari item pertama dalam list
-                return {"generated_text": result[0].get('generated_text', 'Tidak ada respons')}
+                cleaned_text = clean_text(result[0].get('generated_text', 'Tidak ada respons'))
+                return {"generated_text": cleaned_text}
             else:
                 return {"generated_text": "Unexpected response format"}
         else:
