@@ -36,13 +36,18 @@ def get_llama_response(text):
         # Menampilkan status kode dan respons untuk debugging
         st.write(f"Status Code: {response.status_code}")
         st.write(f"Response Text: {response.text}")
-
-        # Pastikan respons dari API adalah valid
+        
         if response.status_code == 200:
-            return response.json()
+            # Mengakses respons yang berupa list dan mengambil item pertama
+            result = response.json()
+            if isinstance(result, list):
+                # Ambil text dari item pertama dalam list
+                return {"generated_text": result[0].get('generated_text', 'Tidak ada respons')}
+            else:
+                return {"generated_text": "Unexpected response format"}
         else:
             return {"generated_text": "Error: Unable to get response from LLaMA"}
-
+    
     except Exception as e:
         st.write(f"Error occurred: {e}")
         return {"generated_text": "An error occurred while processing the request."}
